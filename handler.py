@@ -7,44 +7,63 @@ import requests
 WORKFLOW_INPUT = "workflow-ultrareal.json"
 TEMP_WORKFLOW = "workflow-temp.json"
 OUTPUT_IMAGE_PATH = "/workspace/ComfyUI/output/ComfyUI_00001_.png"
+CHECKPOINT_PATH = "ComfyUI/models/checkpoints/ultrarealFineTune_v4.safetensors"
+CHECKPOINT_URL = "https://huggingface.co/Danrisi/UltraReal_finetune_v4/resolve/main/UltraRealistic_FineTune_Project_v3.safetensors"
 
 def download_checkpoint():
-    path = "ComfyUI/models/checkpoints/ultrarealFineTune_v4.safetensors"
-    url = "https://huggingface.co/Danrisi/UltraReal_finetune_v4/resolve/main/UltraRealistic_FineTune_Project_v3.safetensors"
-
-    if not os.path.exists(path):
-        print("Downloading UltraReal checkpoint...")
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with requests.get(url, stream=True) as r:
+    if not os.path.exists(CHECKPOINT_PATH):
+        print("📥 Downloading UltraReal checkpoint...")
+        os.makedirs(os.path.dirname(CHECKPOINT_PATH), exist_ok=True)
+        with requests.get(CHECKPOINT_URL, stream=True) as r:
             r.raise_for_status()
-            with open(path, "wb") as f:
+            with open(CHECKPOINT_PATH, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
-                    
+        print("✅ Checkpoint downloaded.")
+    else:
+        print("✅ Checkpoint already exists.")
+
 def handler(event):
-    
-    download_checkpoint()  # <-- required
-    # Extract prompt from input
-    prompt = event["input"].get("prompt", "selfie of a girl, visible JPEG artifacts")
+    try:
+        print("📦 Starting handler...")
 
-    # Load original workflow
-    with open(WORKFLOW_INPUT, "r") as f:
-        workflow = json.load(f)
+        # Download model if needed
+        download_checkpoint()
 
-    # Replace prompt in node 2
-    workflow["2"]["inputs"]["text"] = prompt
+        # Extract prompt
+        prompt = event["input"].get("prompt", "selfie of a girl, visible JPEG artifacts")
+        print("📌 Using prompt:", prompt)
 
-    # Save temp workflow file
-    with open(TEMP_WORKFLOW, "w") as f:
-        json.dump(workflow, f)
+        # Load workflow
+        with open(WORKFLOW_INPUT, "r") as f:
+            workflow = json.load(f)
+        print("🧠 Workflow loaded.")
 
-    # Run ComfyUI with headless call
-    subprocess.run([
-        "python3", "ComfyUI/main.py",
-        "--workflow", TEMP_WORKFLOW
-    ], check=True)
+        # Inject prompt
+        workflow["2"]["inputs"]["text"] = prompt
 
-    # Return image path (RunPod auto-exposes /workspace for downloads)
-    return {"output": OUTPUT_IMAGE_PATH}
+        # Save modified workflow
+        with open(TEMP_WORKFLOW, "w") as f:
+            json.dump(workflow, f)
+        print("📝 Updated workflow saved to temp file.")
+
+        # Run ComfyUI headless
+        print("⚙️ Launching ComfyUI process...")
+        subprocess.run([
+            "python3", "ComfyUI/main.py",
+            "--workflow", TEMP_WORKFLOW
+        ], check=True)
+        print("✅ ComfyUI process completed.")
+
+        # Return output path
+        return {"output": OUTPUT_IMAGE_PATH}
+
+    except subprocess.CalledProcessError as e:
+        print("❌ ComfyUI subprocess failed:", str(e))
+        return {"error": "ComfyUI process failed", "details": str(e)}
+
+    except Exception as e:
+        print("❌ Unexpected error:", str(e))
+        return {"error": "Unexpected server error", "details": str(e)}
 
 runpod.serverless.start({"handler": handler})
