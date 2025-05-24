@@ -93,8 +93,8 @@
   },
   "9": {
     "inputs": {
-      "width": 1024,
-      "height": 1024,
+      "width": 512,
+      "height": 512,
       "batch_size": 1
     },
     "class_type": "EmptyLatentImage",
@@ -104,7 +104,19 @@
   },
   "10": {
     "inputs": {
-      "images": ["8", 0],
+      "image": ["8", 0],
+      "width": 1024,
+      "height": 1024,
+      "resample": "lanczos"
+    },
+    "class_type": "ResizeImage",
+    "_meta": {
+      "title": "Resize Output"
+    }
+  },
+  "11": {
+    "inputs": {
+      "images": ["10", 0],
       "filename_prefix": "ComfyUI"
     },
     "class_type": "SaveImage",
