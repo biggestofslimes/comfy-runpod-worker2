@@ -22,6 +22,8 @@ def download_checkpoint():
                     f.write(chunk)
                     
 def handler(event):
+    
+    download_checkpoint()  # <-- required
     # Extract prompt from input
     prompt = event["input"].get("prompt", "selfie of a girl, visible JPEG artifacts")
 
