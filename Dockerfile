@@ -17,8 +17,6 @@ RUN pip install runpod requests
 
 # Download UltraReal checkpoint
 RUN mkdir -p /workspace/ComfyUI/models/checkpoints
-RUN wget -O /workspace/ComfyUI/models/checkpoints/ultrarealFineTune_v4.safetensors \
-  https://huggingface.co/Danrisi/UltraReal_finetune_v4/resolve/main/UltraRealistic_FineTune_Project_v3.safetensors
 
 # Copy handler and workflow
 COPY handler.py /workspace/
