@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.0-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.2.0-base-ubuntu22.04
 
 # Install basic packages
 RUN apt update && apt install -y python3 python3-pip git wget
