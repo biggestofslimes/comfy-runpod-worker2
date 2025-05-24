@@ -4,11 +4,13 @@ import json
 import os
 import requests
 
+VOLUME_PATH = "/workspace/volume"
 WORKFLOW_INPUT = "workflow-ultrareal.json"
-TEMP_WORKFLOW = "workflow-temp.json"
-OUTPUT_IMAGE_PATH = "/workspace/ComfyUI/output/ComfyUI_00001_.png"
-CHECKPOINT_PATH = "ComfyUI/models/checkpoints/ultrarealFineTune_v4.safetensors"
+TEMP_WORKFLOW = os.path.join(VOLUME_PATH, "workflow-temp.json")
+OUTPUT_IMAGE_PATH = os.path.join(VOLUME_PATH, "output.png")
+CHECKPOINT_PATH = os.path.join(VOLUME_PATH, "ultrareal.safetensors")
 CHECKPOINT_URL = "https://huggingface.co/Danrisi/UltraReal_finetune_v4/resolve/main/UltraRealistic_FineTune_Project_v3.safetensors"
+
 
 def download_checkpoint():
     if not os.path.exists(CHECKPOINT_PATH):
@@ -22,6 +24,7 @@ def download_checkpoint():
         print("✅ Checkpoint downloaded.")
     else:
         print("✅ Checkpoint already exists.")
+
 
 def handler(event):
     try:
@@ -65,5 +68,6 @@ def handler(event):
     except Exception as e:
         print("❌ Unexpected error:", str(e))
         return {"error": "Unexpected server error", "details": str(e)}
+
 
 runpod.serverless.start({"handler": handler})
